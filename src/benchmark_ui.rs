@@ -1,40 +1,79 @@
 use bevy_egui::egui;
 use crate::app::AppState;
+#[cfg(feature = "editor")]
 use crate::editor::EditorState;
-use crate::ui::BenchmarkState;
+use crate::ui::{BenchmarkState, UiState};
 use gcodeflow::benchmark::run_benchmark_from_file;
 use crossbeam_channel::bounded;
 use std::env;
 use std::fs;
 use uuid::Uuid;
 
+#[cfg(feature = "editor")]
 pub fn draw_benchmark_window(
     ctx: &egui::Context,
-    _app_state: &mut AppState,
+    ui_state: &mut UiState,
     editor_state: &mut EditorState,
-    bench_state: &mut BenchmarkState,
+    benchmark_state: &mut BenchmarkState,
 ) {
-    if !bench_state.open { return; }
+    draw_benchmark_window_impl(ctx, ui_state, Some(editor_state), benchmark_state);
+}
+
+#[cfg(not(feature = "editor"))]
+pub fn draw_benchmark_window(
+    ctx: &egui::Context,
+    ui_state: &mut UiState,
+    benchmark_state: &mut BenchmarkState,
+) {
+    draw_benchmark_window_impl(ctx, ui_state, None, benchmark_state);
+}
+
+#[cfg(feature = "editor")]
+fn draw_benchmark_window_impl(
+    ctx: &egui::Context,
+    _ui_state: &mut UiState,
+    editor_state: &mut EditorState,
+    benchmark_state: &mut BenchmarkState,
+) {
+    draw_benchmark_window_impl_inner(ctx, _ui_state, Some(editor_state), benchmark_state);
+}
+
+#[cfg(not(feature = "editor"))]
+fn draw_benchmark_window_impl(
+    ctx: &egui::Context,
+    _ui_state: &mut UiState,
+    benchmark_state: &mut BenchmarkState,
+) {
+    draw_benchmark_window_impl_inner(ctx, _ui_state, None, benchmark_state);
+}
+
+fn draw_benchmark_window_impl_inner(
+    ctx: &egui::Context,
+    _ui_state: &mut UiState,
+    editor_state: Option<&mut EditorState>,
+    benchmark_state: &mut BenchmarkState,
+) {
+    if !benchmark_state.open { return; }
 
     egui::Window::new("G-Code Benchmark")
         .collapsible(false)
         .resizable(false)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
-                ui.radio_value(&mut bench_state.use_current_buffer, true, "Use current buffer");
-                ui.radio_value(&mut bench_state.use_current_buffer, false, "Select a file");
+                ui.radio_value(&mut benchmark_state.use_current_buffer, true, "Use current buffer");
+                ui.radio_value(&mut benchmark_state.use_current_buffer, false, "Select a file");
             });
 
             ui.add_space(6.0);
 
-            if !bench_state.use_current_buffer {
+            if !benchmark_state.use_current_buffer {
                 ui.horizontal(|ui| {
                     if ui.button("Choose file...").clicked() {
                         if let Some(p) = rfd::FileDialog::new().add_filter("GCode", &["gcode"]).pick_file() {
-                            bench_state.selected_file = Some(p);
+                            benchmark_state.selected_file = Some(p);
                         }
                     }
-                    if let Some(ref p) = bench_state.selected_file {
+                    if let Some(ref p) = benchmark_state.selected_file {
                         ui.label(format!("{}", p.display()));
                     } else {
                         ui.label("(no file selected)");
@@ -45,53 +84,56 @@ pub fn draw_benchmark_window(
             ui.add_space(6.0);
 
             ui.horizontal(|ui| {
-                if ui.button(if bench_state.running { "Running..." } else { "Run" }).clicked() && !bench_state.running {
+                if ui.button(if benchmark_state.running { "Running..." } else { "Run" }).clicked() && !benchmark_state.running {
                     // Spawn background thread to run benchmark
-                    bench_state.running = true;
-                    bench_state.last_result = None;
-                    bench_state.last_error = None;
+                    benchmark_state.running = true;
+                    benchmark_state.last_result = None;
+                    benchmark_state.last_error = None;
 
                     let (tx, rx) = bounded(1);
-                    bench_state.pending = Some(rx);
+                    benchmark_state.pending = Some(rx);
 
-                    if bench_state.use_current_buffer {
+                    if benchmark_state.use_current_buffer {
                         // write current buffer to temp file
                         let tmp = env::temp_dir().join(format!("gcbm_{}.gcode", Uuid::new_v4()));
-                        let contents = _app_state.gcode_content.clone();
+                        #[cfg(feature = "editor")]
+                        let contents = editor_state.as_ref().map(|e| e.get_content()).unwrap_or_default();
+                        #[cfg(not(feature = "editor"))]
+                        let contents = String::new();
                         let _ = fs::write(&tmp, contents);
                         std::thread::spawn(move || {
                             let res = run_benchmark_from_file(&tmp).map_err(|e| e.to_string());
                             let _ = tx.send(res);
                             let _ = fs::remove_file(&tmp);
                         });
-                    } else if let Some(ref file) = bench_state.selected_file {
+                    } else if let Some(ref file) = benchmark_state.selected_file {
                         let p = file.clone();
                         std::thread::spawn(move || {
                             let res = run_benchmark_from_file(p).map_err(|e| e.to_string());
                             let _ = tx.send(res);
                         });
                     } else {
-                        bench_state.running = false;
-                        bench_state.last_error = Some("No file selected".to_string());
+                        benchmark_state.running = false;
+                        benchmark_state.last_error = Some("No file selected".to_string());
                     }
                 }
 
                 if ui.button("Close").clicked() {
-                    bench_state.open = false;
+                    benchmark_state.open = false;
                 }
             });
 
             ui.separator();
 
-            if bench_state.running {
+            if benchmark_state.running {
                 ui.label("Benchmark running...");
             }
 
-            if let Some(ref err) = bench_state.last_error {
+            if let Some(ref err) = benchmark_state.last_error {
                 ui.colored_label(egui::Color32::RED, err);
             }
 
-            if let Some(ref res) = bench_state.last_result {
+            if let Some(ref res) = benchmark_state.last_result {
                 ui.group(|ui| {
                     ui.label(format!("File: {} ({} lines, {} bytes)", res.file_name, res.line_count, res.file_size));
                     ui.label(format!("File read: {:.2} ms", res.file_read_ms));

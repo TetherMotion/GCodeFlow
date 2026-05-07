@@ -12,6 +12,7 @@ use crate::config::{
 };
 use crate::plot_view::PlotViewState;
 use crate::trajectory::{TrajectoryData, TrajectoryUpdateEvent};
+#[cfg(feature = "editor")]
 use crate::editor::{EditorState, EditorChangeEvent};
 
 use crossbeam_channel;
@@ -55,20 +56,37 @@ pub struct UiState {
     pub show_point_info: bool,
 }
 
-fn ui_root_system(
+/// Internal UI state
+#[derive(Resource, Default)]
+pub struct UiStateInternal {
+    // Add internal state fields here if needed
+}
+
+impl Plugin for UiPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(UiState::default())
+            .insert_resource(UiStateInternal::default())
+            .insert_resource(BenchmarkState::default())
+            // Render the entire egui hierarchy in a single system so panel order is
+            // deterministic: top menu (fixed) -> side panels -> center (3D+controls).
+            .add_systems(Update, draw_ui);
+    }
+}
+
+fn draw_ui(
     mut contexts: EguiContexts,
-    mut state: ResMut<AppState>,
-    mut ui_state: ResMut<UiState>,
-    mut plot_state: ResMut<PlotViewState>,
-    trajectory: Res<TrajectoryData>,
+    mut state: ResMut<UiState>,
+    mut ui_state: ResMut<UiStateInternal>,
+    #[cfg(feature = "editor")] mut editor_state: ResMut<EditorState>,
+    #[cfg(feature = "editor")] mut editor_change_events: EventWriter<EditorChangeEvent>,
     mut trajectory_events: EventWriter<TrajectoryUpdateEvent>,
-    mut camera_query: Query<(&mut CameraController, &mut Transform, &mut Projection)>,
-    mut editor_state: ResMut<EditorState>,
-    mut editor_change_events: EventWriter<EditorChangeEvent>,
+    mut trajectory: ResMut<TrajectoryData>,
+    mut benchmark_state: ResMut<BenchmarkState>,
+    mut camera_controller: ResMut<CameraController>,
+    mut app_state: Res<AppState>,
     mut middle_split: Local<f32>,
     mut commands: Commands,
     native_plot_handle: Option<Res<crate::native_plot_window::NativePlotWindowHandle>>,
-    mut benchmark_state: ResMut<BenchmarkState>,
 ) {
     let ctx = contexts.ctx_mut();
 
@@ -90,7 +108,10 @@ fn ui_root_system(
     );
 
     // Draw benchmark modal if open
+    #[cfg(feature = "editor")]
     crate::benchmark_ui::draw_benchmark_window(ctx, &mut *state, &mut *editor_state, &mut *benchmark_state);
+    #[cfg(not(feature = "editor"))]
+    crate::benchmark_ui::draw_benchmark_window(ctx, &mut *state, &mut *benchmark_state);
 
     // If a benchmark task is pending, poll for completion and update the state
     if let Some(rx) = benchmark_state.pending.as_ref() {
@@ -122,13 +143,16 @@ fn ui_root_system(
     info_panel_impl(ctx, &*trajectory, &mut *state);
 
     // Right: editor is always right-most.
-    crate::editor::editor_panel(
-        ctx,
-        &mut *state,
-        &mut *editor_state,
-        &mut editor_change_events,
-        &mut trajectory_events,
-    );
+    #[cfg(feature = "editor")]
+    {
+        crate::editor::editor_panel(
+            ctx,
+            &mut *state,
+            &mut *editor_state,
+            &mut editor_change_events,
+            &mut trajectory_events,
+        );
+    }
 
     // Optional right-side settings panels (stack to the left of the editor).
     settings_panel_impl(ctx, &mut *state, &mut *ui_state);

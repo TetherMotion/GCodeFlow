@@ -49,8 +49,25 @@ struct Segment {
     motion_type: MotionType,
 }
 
+#[cfg(tether_ffi)]
 impl From<&FfiMotionSegment> for Segment {
     fn from(seg: &FfiMotionSegment) -> Self {
+        Self {
+            start: [seg.start.x, seg.start.y, seg.start.z, seg.start.a, seg.start.b, seg.start.c, seg.start.u, seg.start.v, seg.start.w],
+            end: [seg.end.x, seg.end.y, seg.end.z, seg.end.a, seg.end.b, seg.end.c, seg.end.u, seg.end.v, seg.end.w],
+            center: [seg.center.x, seg.center.y, seg.center.z, seg.center.a, seg.center.b, seg.center.c, seg.center.u, seg.center.v, seg.center.w],
+            arc_radius: seg.arc_radius,
+            arc_sweep: seg.arc_sweep,
+            segment_length: seg.segment_length,
+            segment_time: seg.segment_time,
+            motion_type: MotionType::from(seg.motion_type),
+        }
+    }
+}
+
+#[cfg(tether_ffi_disabled)]
+impl From<&crate::gcode::MotionSegment> for Segment {
+    fn from(seg: &crate::gcode::MotionSegment) -> Self {
         Self {
             start: [seg.start.x, seg.start.y, seg.start.z, seg.start.a, seg.start.b, seg.start.c, seg.start.u, seg.start.v, seg.start.w],
             end: [seg.end.x, seg.end.y, seg.end.z, seg.end.a, seg.end.b, seg.end.c, seg.end.u, seg.end.v, seg.end.w],

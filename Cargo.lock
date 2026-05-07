@@ -3309,13 +3309,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gcode_editor"
-version = "1.0.0"
-dependencies = [
- "egui",
-]
-
-[[package]]
 name = "gcodeflow"
 version = "0.1.0"
 dependencies = [
@@ -3333,7 +3326,6 @@ dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
- "gcode_editor",
  "glam",
  "image",
  "libc",

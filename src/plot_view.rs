@@ -96,7 +96,7 @@ struct CachedPlotData {
     cartesian_sampled_1ms: Vec<[f64; 2]>,
     
     /// Full trajectory points for queries
-    trajectory_points: Vec<FfiTrajectoryPoint>,
+    trajectory_points: Vec<TrajectoryPoint>,
     
     /// Bounds for auto-fit
     time_bounds: (f64, f64, f64, f64), // (min_x, max_x, min_y, max_y)
@@ -470,7 +470,7 @@ fn render_cartesian_plot(ui: &mut egui::Ui, plot_state: &PlotViewState) -> Optio
 }
 
 fn find_nearest_point(
-    points: &[FfiTrajectoryPoint],
+    points: &[TrajectoryPoint],
     hover_pos: egui::Pos2,
     plot_state: &PlotViewState,
 ) -> usize {
@@ -507,7 +507,7 @@ fn find_nearest_point(
     nearest_idx
 }
 
-fn show_point_detail_popup(ui: &mut egui::Ui, point: &FfiTrajectoryPoint) {
+fn show_point_detail_popup(ui: &mut egui::Ui, point: &TrajectoryPoint) {
     egui::Window::new("Point Details")
         .collapsible(false)
         .resizable(false)
@@ -555,7 +555,7 @@ fn axis_name(axis: usize) -> &'static str {
     }
 }
 
-fn get_axis_value(pos: &FfiPosition, axis: usize) -> f64 {
+fn get_axis_value(pos: &Position, axis: usize) -> f64 {
     match axis {
         0 => pos.x,
         1 => pos.y,

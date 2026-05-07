@@ -118,8 +118,10 @@ mod ffi {
 // --------------------------------------------------------------------------
 // Re-export bridge types and add helper conversions
 // --------------------------------------------------------------------------
+#[cfg(tether_ffi)]
 pub use ffi::{FfiMotionSegment, FfiPosition, FfiTrajectoryPoint};
 
+#[cfg(tether_ffi)]
 impl FfiPosition {
     pub fn to_vec3(&self) -> Vec3 {
         Vec3::new(self.x as f32, self.y as f32, self.z as f32)
@@ -441,6 +443,30 @@ impl TrajectoryGenerator {
         0.0
     }
 
+    pub fn get_point(&self, _index: usize) -> TrajectoryPoint {
+        TrajectoryPoint::default()
+    }
+
+    pub fn get_all_points(&self) -> Vec<TrajectoryPoint> {
+        Vec::new()
+    }
+
+    pub fn sample_at_interval(&self, _interval_seconds: f64) -> Vec<TrajectoryPoint> {
+        Vec::new()
+    }
+
+    pub fn sample_adaptive(&self, _max_deviation_mm: f64) -> Vec<TrajectoryPoint> {
+        Vec::new()
+    }
+
+    pub fn query_at_time(&self, _time_seconds: f64) -> TrajectoryPoint {
+        TrajectoryPoint::default()
+    }
+
+    pub fn get_block_range_for_lines(&self, _start_line: usize, _end_line: usize) -> Option<(usize, usize)> {
+        None
+    }
+
     pub fn generate_from_gcode(
         &mut self,
         _gcode: &str,
@@ -503,6 +529,8 @@ pub struct TrajectoryPoint {
     pub acceleration: Position,
     pub time: f64,
     pub block_index: i32,
+    pub segment_index: i32,
+    pub motion_type: u8,
 }
 
 /// Machine configuration (used by callers to set kinematic limits)

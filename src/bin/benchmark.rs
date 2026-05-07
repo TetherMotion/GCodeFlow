@@ -7,7 +7,10 @@ use std::env;
 use std::time::Instant;
 
 // Use the cxx-based FFI module from the parent library crate
-use gcodeflow::gcode::{Parser, Interpreter, TrajectoryGenerator, FfiMotionSegment};
+use gcodeflow::gcode::{Parser, Interpreter, TrajectoryGenerator};
+
+#[cfg(tether_ffi)]
+use gcodeflow::gcode::FfiMotionSegment;
 
 /// Memory limit: 6GB
 const MEMORY_LIMIT_BYTES: u64 = 6 * 1024 * 1024 * 1024;
@@ -83,6 +86,7 @@ struct Segment {
     motion_type: MotionType,
 }
 
+#[cfg(tether_ffi)]
 impl From<&FfiMotionSegment> for Segment {
     fn from(seg: &FfiMotionSegment) -> Self {
         Self {
