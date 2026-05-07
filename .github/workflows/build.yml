@@ -46,22 +46,21 @@ jobs:
         path: target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
     - name: Run cargo check
-      run: cargo check --verbose
+      run: cargo check --lib --verbose
     - name: Run cargo test
-      run: cargo test --verbose
+      run: cargo test --lib --verbose
     - name: Run cargo clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: cargo clippy --lib --all-targets --all-features -- -D warnings
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
     - name: Build release
-      run: cargo build --release --verbose
+      run: cargo build --lib --release --verbose
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: gcodeflow-ubuntu
         path: |
-          target/release/gcodeflow
-          target/release/gcode_benchmark
+          target/release/libgcodeflow.a
 
   build-multi-os:
     # Only run on tags or manual trigger
@@ -113,24 +112,23 @@ jobs:
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Run cargo check
-      run: cargo check --verbose
+      run: cargo check --lib --verbose
 
     - name: Run cargo test
-      run: cargo test --verbose
+      run: cargo test --lib --verbose
 
     - name: Run cargo clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: cargo clippy --lib --all-targets --all-features -- -D warnings
 
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
 
     - name: Build release
-      run: cargo build --release --verbose
+      run: cargo build --lib --release --verbose
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: gcodeflow-${{ matrix.os }}
         path: |
-          target/release/gcodeflow
-          target/release/gcode_benchmark
+          target/release/libgcodeflow.a
