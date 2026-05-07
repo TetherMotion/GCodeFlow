@@ -31,7 +31,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y cmake g++ pkg-config libx11-dev libxi-dev libgl1-mesa-dev
+        sudo apt-get install -y cmake g++ pkg-config libx11-dev libxi-dev libgl1-mesa-dev libasound2-dev libudev-dev
 
     - name: Install system dependencies (macOS)
       if: matrix.os == 'macos-latest'
