@@ -393,6 +393,27 @@ impl Interpreter {
     pub fn segment_count(&self) -> usize {
         0
     }
+
+    pub fn get_segment(&self, _index: usize) -> MotionSegment {
+        MotionSegment {
+            start: Position::default(),
+            end: Position::default(),
+            center: Position::default(),
+            feed_rate: 0.0,
+            arc_radius: 0.0,
+            arc_sweep: 0.0,
+            segment_length: 0.0,
+            segment_time: 0.0,
+            motion_type: 0,
+            block_index: 0,
+            plane: 0,
+            is_rapid: false,
+        }
+    }
+
+    pub fn get_all_segments(&self) -> Vec<MotionSegment> {
+        Vec::new()
+    }
 }
 
 #[cfg(tether_ffi_disabled)]
@@ -575,6 +596,7 @@ pub struct Token {
     pub token_type: TokenType,
 }
 
+#[cfg(tether_ffi)]
 /// Tokenize a single line of GCode for syntax highlighting.
 ///
 /// This uses the C++ lexer highlighter (via cxx FFI) so the UI shares the
@@ -611,6 +633,14 @@ pub fn tokenize_line(line: &str) -> Vec<Token> {
     }
 
     tokens
+}
+
+#[cfg(tether_ffi_disabled)]
+/// Tokenize a single line of GCode for syntax highlighting (stub when FFI disabled).
+///
+/// This is a stub implementation that returns an empty vector when FFI is disabled.
+pub fn tokenize_line(_line: &str) -> Vec<Token> {
+    Vec::new()
 }
 
 /// Pure-Rust fallback tokenizer for syntax highlighting.
