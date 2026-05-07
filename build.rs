@@ -2,6 +2,9 @@ use std::env;
 use std::path::PathBuf;
 
 fn main() {
+    // Tell cargo about the cfg values we'll use
+    println!("cargo::rustc-check-cfg=cfg(tether_ffi)");
+    println!("cargo::rustc-check-cfg=cfg(tether_ffi_disabled)");
     println!("cargo:rerun-if-changed=src/gcode_ffi.cpp");
     println!("cargo:rerun-if-changed=src/gcode_ffi.hpp");
     println!("cargo:rerun-if-changed=build.rs");
