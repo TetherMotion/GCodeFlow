@@ -16,16 +16,19 @@ fn main() {
     let tether_build = project_root.join("Tether/build");
     let ffi_src = PathBuf::from(&manifest_dir).join("src/gcode_ffi.cpp");
 
-    // Check if we can link against pre-built Tether libraries (required)
-    let use_prebuilt = tether_build.join("lib/libtether_gcode.a").exists() 
+    // Check if we can link against pre-built Tether libraries
+    let use_prebuilt = tether_build.join("lib/libtether_gcode.a").exists()
         && tether_build.join("lib/libtether_common.a").exists();
 
-    if use_prebuilt {
+    // Check if FFI is explicitly disabled via environment variable
+    let ffi_disabled = env::var("GCODEFLOW_DISABLE_FFI").is_ok();
+
+    if use_prebuilt && !ffi_disabled {
         // Link against pre-built component libraries
         println!("cargo:rustc-link-search=native={}", tether_build.join("lib").display());
         println!("cargo:rustc-link-lib=static=tether_gcode");
         println!("cargo:rustc-link-lib=static=tether_common");
-        
+
         // Tell cxx to generate the Rust/C++ glue from the bridge definition
         cxx_build::bridge("src/gcode.rs")
             .file(&ffi_src)
@@ -35,10 +38,17 @@ fn main() {
             .flag_if_supported("-Wall")
             .flag_if_supported("-O2")
             .compile("gcode_cxx");
-    } else {
-        // Tether must be built first - provide clear error message
-        panic!("Tether libraries not found. Please build Tether first: cd ../Tether && mkdir -p build && cd build && cmake .. && make");
-    }
 
-    println!("cargo:rustc-link-lib=stdc++");
+        println!("cargo:rustc-link-lib=stdc++");
+        println!("cargo:rustc-cfg=tether_ffi");
+    } else {
+        // FFI is not available - skip C++ compilation
+        if ffi_disabled {
+            println!("cargo:warning=FFI explicitly disabled via GCODEFLOW_DISABLE_FFI");
+        } else {
+            println!("cargo:warning=Tether libraries not found. FFI disabled. Build will have limited functionality.");
+            println!("cargo:warning=To enable FFI, build Tether first: cd ../Tether && mkdir -p build && cd build && cmake .. && make");
+        }
+        println!("cargo:rustc-cfg(tether_ffi_disabled)");
+    }
 }

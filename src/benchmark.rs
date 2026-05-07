@@ -3,7 +3,7 @@ use std::path::Path;
 use std::fs;
 use std::error::Error;
 
-use crate::gcode::{Parser, Interpreter, FfiMotionSegment};
+use crate::gcode::{Parser, Interpreter, MotionSegment};
 
 /// Results for a single test entry
 #[derive(Debug, Clone)]

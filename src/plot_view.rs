@@ -8,7 +8,7 @@ use bevy_egui::{egui, EguiContexts};
 use egui_plot::{Legend, Line, Plot, PlotPoints, Points};
 
 use crate::app::AppState;
-use crate::gcode::{FfiPosition, FfiTrajectoryPoint, TrajectoryGenerator};
+use crate::gcode::{Position, TrajectoryPoint, TrajectoryGenerator};
 use crate::trajectory::TrajectoryData;
 
 pub struct PlotViewPlugin;

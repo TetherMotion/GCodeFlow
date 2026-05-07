@@ -12,10 +12,13 @@ pub enum GCodeError {
     GenerationFailed(String),
     #[error("Operation failed: {0}")]
     OperationFailed(String),
+    #[error("FFI not available")]
+    FfiNotAvailable,
 }
 
 pub type Result<T> = std::result::Result<T, GCodeError>;
 
+#[cfg(tether_ffi)]
 #[cxx::bridge(namespace = "gcode_ffi")]
 mod ffi {
     #[derive(Debug, Clone, Default)]
@@ -150,10 +153,12 @@ impl From<u8> for MotionType {
 // Safe Rust wrappers
 // --------------------------------------------------------------------------
 
+#[cfg(tether_ffi)]
 pub struct Parser {
     inner: cxx::UniquePtr<ffi::FfiParser>,
 }
 
+#[cfg(tether_ffi)]
 impl Parser {
     pub fn new() -> Result<Self> {
         let inner = ffi::new_parser();
@@ -186,16 +191,19 @@ impl Parser {
     }
 }
 
+#[cfg(tether_ffi)]
 impl Default for Parser {
     fn default() -> Self {
         Self::new().expect("Failed to create parser")
     }
 }
 
+#[cfg(tether_ffi)]
 pub struct Interpreter {
     inner: cxx::UniquePtr<ffi::FfiInterpreter>,
 }
 
+#[cfg(tether_ffi)]
 impl Interpreter {
     pub fn new() -> Result<Self> {
         let inner = ffi::new_interpreter();
@@ -229,16 +237,19 @@ impl Interpreter {
     }
 }
 
+#[cfg(tether_ffi)]
 impl Default for Interpreter {
     fn default() -> Self {
         Self::new().expect("Failed to create interpreter")
     }
 }
 
+#[cfg(tether_ffi)]
 pub struct TrajectoryGenerator {
     inner: cxx::UniquePtr<ffi::FfiTrajectoryGenerator>,
 }
 
+#[cfg(tether_ffi)]
 impl TrajectoryGenerator {
     pub fn new() -> Result<Self> {
         let inner = ffi::new_trajectory_generator();
@@ -274,27 +285,27 @@ impl TrajectoryGenerator {
     pub fn get_all_points(&self) -> Vec<FfiTrajectoryPoint> {
         self.inner.get_all_points()
     }
-    
+
     /// Sample trajectory at regular time intervals for plotting
     pub fn sample_at_interval(&self, interval_seconds: f64) -> Vec<FfiTrajectoryPoint> {
         self.inner.sample_at_interval(interval_seconds)
     }
-    
+
     /// Sample trajectory adaptively based on spatial deviation
     pub fn sample_adaptive(&self, max_deviation_mm: f64) -> Vec<FfiTrajectoryPoint> {
         self.inner.sample_adaptive(max_deviation_mm)
     }
-    
+
     /// Query trajectory state at a specific time
     pub fn query_at_time(&self, time_seconds: f64) -> FfiTrajectoryPoint {
         self.inner.query_at_time(time_seconds)
     }
-    
+
     /// Get block index range for given gcode line range
     pub fn get_block_range_for_lines(&self, start_line: usize, end_line: usize) -> Option<(usize, usize)> {
         let mut start_block: usize = 0;
         let mut end_block: usize = 0;
-        
+
         if self.inner.get_block_range_for_lines(start_line, end_line, &mut start_block, &mut end_block) {
             Some((start_block, end_block))
         } else {
@@ -325,6 +336,7 @@ impl TrajectoryGenerator {
     }
 }
 
+#[cfg(tether_ffi)]
 impl Default for TrajectoryGenerator {
     fn default() -> Self {
         Self::new().expect("Failed to create trajectory generator")
@@ -332,11 +344,145 @@ impl Default for TrajectoryGenerator {
 }
 
 // --------------------------------------------------------------------------
+// Stub implementations when FFI is disabled
+// --------------------------------------------------------------------------
+
+#[cfg(tether_ffi_disabled)]
+pub struct Parser;
+
+#[cfg(tether_ffi_disabled)]
+impl Parser {
+    pub fn new() -> Result<Self> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn parse_string(&mut self, _gcode: &str) -> Result<()> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn parse_file(&mut self, _path: &str) -> Result<()> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn block_count(&self) -> usize {
+        0
+    }
+
+    pub fn get_block_original_text(&self, _index: usize) -> String {
+        String::new()
+    }
+}
+
+#[cfg(tether_ffi_disabled)]
+pub struct Interpreter;
+
+#[cfg(tether_ffi_disabled)]
+impl Interpreter {
+    pub fn new() -> Result<Self> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn configure(&mut self, _max_vel: f64, _max_accel: f64, _max_jerk: f64) {
+        // No-op
+    }
+
+    pub fn load_blocks(&mut self, _parser: &Parser) -> Result<()> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn segment_count(&self) -> usize {
+        0
+    }
+}
+
+#[cfg(tether_ffi_disabled)]
+pub struct TrajectoryGenerator;
+
+#[cfg(tether_ffi_disabled)]
+impl TrajectoryGenerator {
+    pub fn new() -> Result<Self> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn configure(&mut self, _time_step: f64, _max_deviation: f64) {
+        // No-op
+    }
+
+    pub fn generate(&mut self, _interp: &Interpreter) -> Result<()> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+
+    pub fn point_count(&self) -> usize {
+        0
+    }
+
+    pub fn duration(&self) -> f64 {
+        0.0
+    }
+
+    pub fn generate_from_gcode(
+        &mut self,
+        _gcode: &str,
+        _max_vel: f64,
+        _max_accel: f64,
+        _max_jerk: f64,
+        _time_resolution: f64,
+    ) -> Result<Vec<TrajectoryPoint>> {
+        Err(GCodeError::FfiNotAvailable)
+    }
+}
+
+// --------------------------------------------------------------------------
 // Compatibility re-exports for the rest of the crate
 // --------------------------------------------------------------------------
+#[cfg(tether_ffi)]
 pub use FfiPosition as Position;
+#[cfg(tether_ffi)]
 pub use FfiMotionSegment as MotionSegment;
+#[cfg(tether_ffi)]
 pub use FfiTrajectoryPoint as TrajectoryPoint;
+
+// Stub types when FFI is disabled
+#[cfg(tether_ffi_disabled)]
+#[derive(Debug, Clone, Default)]
+pub struct Position {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub a: f64,
+    pub b: f64,
+    pub c: f64,
+    pub u: f64,
+    pub v: f64,
+    pub w: f64,
+}
+
+#[cfg(tether_ffi_disabled)]
+#[derive(Debug, Clone)]
+pub struct MotionSegment {
+    pub start: Position,
+    pub end: Position,
+    pub center: Position,
+    pub feed_rate: f64,
+    pub arc_radius: f64,
+    pub arc_sweep: f64,
+    pub segment_length: f64,
+    pub segment_time: f64,
+    pub motion_type: u8,
+    pub block_index: i32,
+    pub plane: u8,
+    pub is_rapid: bool,
+}
+
+#[cfg(tether_ffi_disabled)]
+#[derive(Debug, Clone, Default)]
+pub struct TrajectoryPoint {
+    pub position: Position,
+    pub velocity: Position,
+    pub acceleration: Position,
+    pub time: f64,
+    pub block_index: i32,
+}
 
 /// Machine configuration (used by callers to set kinematic limits)
 #[derive(Debug, Clone)]
