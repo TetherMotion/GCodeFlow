@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+        override: true
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake g++ pkg-config libx11-dev libxi-dev libgl1-mesa-dev
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cmake pkg-config
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo index
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Cache cargo build
+      uses: actions/cache@v3
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run cargo check
+      run: cargo check --verbose --no-default-features
+
+    - name: Run cargo test
+      run: cargo test --verbose --no-default-features
+
+    - name: Run cargo clippy
+      run: cargo clippy --all-targets --no-default-features -- -D warnings
+
+    - name: Run cargo fmt
+      run: cargo fmt --all -- --check
+
+    - name: Build release
+      run: cargo build --release --verbose --no-default-features
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: gcodeflow-${{ matrix.os }}
+        path: |
+          target/release/gcodeflow
+          target/release/gcode_benchmark

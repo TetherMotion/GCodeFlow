@@ -6,18 +6,26 @@
 //! - Syntax highlighting for GCode elements
 //! - Selection-based visualization filtering
 
+#[cfg(feature = "editor")]
 use bevy::prelude::*;
+#[cfg(feature = "editor")]
 use bevy_egui::egui;
 
+#[cfg(feature = "editor")]
 use crate::app::AppState;
+#[cfg(feature = "editor")]
 use crate::trajectory::TrajectoryUpdateEvent;
+#[cfg(feature = "editor")]
 use crate::config::SyntaxColors;
 
+#[cfg(feature = "editor")]
 // Use the extracted editor crate for UI/editor functionality
 use gcode_editor::{TokenType, tokenize_line_pure_rust};
 
+#[cfg(feature = "editor")]
 pub struct EditorPlugin;
 
+#[cfg(feature = "editor")]
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         // Insert the local EditorState resource (wrapping the gcode_editor inner state)
@@ -29,6 +37,7 @@ impl Plugin for EditorPlugin {
     }
 }
 
+#[cfg(feature = "editor")]
 /// Editor state (local Bevy resource)
 #[derive(Resource, Clone)]
 pub struct EditorState {
@@ -39,6 +48,7 @@ pub struct EditorState {
     id_counter: u64,
 }
 
+#[cfg(feature = "editor")]
 impl Default for EditorState {
     fn default() -> Self {
         Self {
@@ -48,6 +58,7 @@ impl Default for EditorState {
     }
 }
 
+#[cfg(feature = "editor")]
 impl EditorState {
     /// Get a unique ID for widgets
     pub fn next_id(&mut self) -> u64 {
@@ -56,16 +67,19 @@ impl EditorState {
     }
 }
 
+#[cfg(feature = "editor")]
 // Allow convenient field access to the inner editor state
 impl std::ops::Deref for EditorState {
     type Target = gcode_editor::EditorState;
     fn deref(&self) -> &Self::Target { &self.inner }
 }
 
+#[cfg(feature = "editor")]
 impl std::ops::DerefMut for EditorState {
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.inner }
 }
 
+#[cfg(feature = "editor")]
 /// Event emitted when editor content changes
 #[derive(Event, Clone)]
 pub struct EditorChangeEvent {
@@ -73,6 +87,7 @@ pub struct EditorChangeEvent {
     pub selected_lines: Option<(usize, usize)>,
 }
 
+#[cfg(feature = "editor")]
 pub(crate) fn editor_panel(
     ctx: &egui::Context,
     state: &mut AppState,
@@ -290,6 +305,7 @@ pub(crate) fn editor_panel(
         });
 }
 
+#[cfg(feature = "editor")]
 /// Apply syntax highlighting to GCode text
 /// Returns a LayoutJob with colored text spans
 pub fn highlight_gcode(text: &str, colors: &SyntaxColors, font_size: f32) -> egui::text::LayoutJob {
@@ -395,6 +411,7 @@ pub fn highlight_gcode(text: &str, colors: &SyntaxColors, font_size: f32) -> egu
     job
 }
 
+#[cfg(feature = "editor")]
 /// Create a LayoutJob for syntax highlighting with wrap width
 /// This version is used by the TextEdit layouter callback
 fn highlight_gcode_layouter(text: &str, colors: &SyntaxColors, font_size: f32, wrap_width: f32) -> egui::text::LayoutJob {
@@ -406,6 +423,7 @@ fn highlight_gcode_layouter(text: &str, colors: &SyntaxColors, font_size: f32, w
     job
 }
 
+#[cfg(feature = "editor")]
 fn array_to_color32(arr: &[f32; 4]) -> egui::Color32 {
     egui::Color32::from_rgba_unmultiplied(
         (arr[0] * 255.0) as u8,
@@ -419,7 +437,7 @@ fn array_to_color32(arr: &[f32; 4]) -> egui::Color32 {
 // UNIT TESTS
 // ============================================================================
 
-#[cfg(test)]
+#[cfg(all(feature = "editor", test))]
 mod tests {
     use super::*;
     

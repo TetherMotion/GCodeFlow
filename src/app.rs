@@ -9,6 +9,7 @@ use std::path::PathBuf;
 
 use crate::camera::CameraPlugin;
 use crate::config::{AppConfig, CameraPreset};
+#[cfg(feature = "editor")]
 use crate::editor::EditorPlugin;
 use crate::kinematics::KinematicsPlugin;
 use crate::plot_view::PlotViewPlugin;
@@ -169,9 +170,21 @@ pub fn run(args: Args) -> Result<()> {
     app.add_plugins(EguiPlugin);
 
     // Add our plugins
+    #[cfg(feature = "editor")]
     app.add_plugins((
         CameraPlugin,
         EditorPlugin,
+        KinematicsPlugin,
+        PlotViewPlugin,
+        RenderingPlugin,
+        SimulationPlugin,
+        TrajectoryPlugin,
+        UiPlugin,
+    ));
+
+    #[cfg(not(feature = "editor"))]
+    app.add_plugins((
+        CameraPlugin,
         KinematicsPlugin,
         PlotViewPlugin,
         RenderingPlugin,
