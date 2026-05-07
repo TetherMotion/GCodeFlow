@@ -1,0 +1,110 @@
+[package]
+name = "gcodeflow"
+version = "0.1.0"
+edition = "2021"
+description = "GCode visualization and simulation tool with Bevy 3D engine"
+license = "MIT"
+authors = ["ESP32EtherCAT Team"]
+
+[dependencies]
+# Bevy game engine with egui integration
+bevy = "0.14"
+bevy_egui = "0.28"
+bevy_mod_picking = "0.20"
+
+# egui plotting
+egui_plot = "0.28"
+
+# 3D model loading (STEP, STL support)
+bevy_stl = "0.14"
+
+# Serialization for config
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1.0"
+
+# Command line parsing
+clap = { version = "4.5", features = ["derive"] }
+
+# Syntax highlighting
+syntect = "5.2"
+
+# File watching for autosave
+notify = "6.1"
+
+# Async runtime for file ops
+tokio = { version = "1.37", features = ["fs", "sync", "rt-multi-thread", "macros"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+# Math and geometry
+glam = { version = "0.27", features = ["serde"] }
+nalgebra = "0.32"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID for unique identifiers
+uuid = { version = "1.8", features = ["v4", "serde"] }
+
+# Screenshot capture
+image = "0.25"
+
+# Native file dialogs
+rfd = "0.14"
+
+# FFI bindings to C++ gcode library using cxx
+cxx = "1.0"
+
+# For memory limit on Linux
+libc = "0.2"
+
+# Editor extracted into separate crate
+gcode_editor = { path = "/home/uli/dev/gcode-editor-rs" }
+
+# Native, standalone plot window (eframe) and cross-thread messaging
+eframe = "0.28"
+crossbeam-channel = "0.5"
+once_cell = "1.17"
+
+[build-dependencies]
+cc = { version = "1.0", features = ["parallel"] }
+cxx-build = "1.0"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
+
+# Fast benchmark profile
+[profile.bench]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[lib]
+name = "gcodeflow"
+path = "src/lib.rs"
+
+[[bin]]
+name = "gcodeflow"
+path = "src/main.rs"
+
+[[bin]]
+name = "gcode_benchmark"
+path = "src/bin/benchmark.rs"

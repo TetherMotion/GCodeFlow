@@ -1,0 +1,43 @@
+; GCodeFlow Examples Index
+; ==========================
+; These example files demonstrate various GCode features
+
+; Basic Examples (000-099):
+; - 000_empty.gcode - Empty program
+; - 001_single_line.gcode - Single linear move
+; - 002_square.gcode - Simple square
+; - 010_rapids.gcode - Rapid positioning
+; - 020_arcs.gcode - CW and CCW arcs
+
+; Intermediate Examples (100-199):
+; - 100_rounded_square.gcode - Square with rounded corners
+; - 101_circle.gcode - Full circle
+; - 110_helix.gcode - Helical interpolation
+; - 120_pocketing.gcode - Simple pocket
+
+; Advanced Examples (200-299):
+; - 200_ocode_sub.gcode - Subroutine example
+; - 210_ocode_while.gcode - While loop
+; - 220_ocode_repeat.gcode - Repeat loop
+; - 230_ocode_if.gcode - Conditional execution
+; - 240_bolt_circle.gcode - Parametric bolt circle
+
+; Complex Examples (300-399):
+; - 300_nested_loops.gcode - Nested control flow
+; - 310_spiral_pocket.gcode - Spiral pocket clearing
+; - 320_3d_surface.gcode - 3D surface machining
+; - 330_thread_mill.gcode - Thread milling
+; - 340_text_engrave.gcode - Text engraving
+
+; Full Programs (400-499):
+; - 400_complete_part.gcode - Complete bracket machining program
+; - 410_production_run.gcode - Multi-part production batch
+; - 420_error_handling.gcode - Parameter validation and error handling
+; - 430_involute_gear.gcode - Complex involute gear profile cutting
+; - 440_trochoidal_milling.gcode - High-efficiency adaptive clearing
+
+; Multi-Axis (500+):
+; - 500_5axis_impeller.gcode - 5-axis impeller blade machining
+
+; Total physical example files: 25
+; Programmatically generated examples: ~500 (in tests/gcode_examples.rs)
