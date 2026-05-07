@@ -57,19 +57,19 @@ jobs:
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Run cargo check
-      run: cargo check --verbose --no-default-features
+      run: cargo check --verbose
 
     - name: Run cargo test
-      run: cargo test --verbose --no-default-features
+      run: cargo test --verbose
 
     - name: Run cargo clippy
-      run: cargo clippy --all-targets --no-default-features -- -D warnings
+      run: cargo clippy --all-targets --all-features -- -D warnings
 
     - name: Run cargo fmt
       run: cargo fmt --all -- --check
 
     - name: Build release
-      run: cargo build --release --verbose --no-default-features
+      run: cargo build --release --verbose
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

@@ -6,10 +6,6 @@ description = "GCode visualization and simulation tool with Bevy 3D engine"
 license = "MIT"
 authors = ["ESP32EtherCAT Team"]
 
-[features]
-default = ["editor"]
-editor = ["gcode_editor"]
-
 [dependencies]
 # Bevy game engine with egui integration
 bevy = "0.14"
@@ -68,9 +64,6 @@ cxx = "1.0"
 
 # For memory limit on Linux
 libc = "0.2"
-
-# Editor extracted into separate crate (optional for CI)
-gcode_editor = { path = "/home/uli/dev/gcode-editor-rs", optional = true }
 
 # Native, standalone plot window (eframe) and cross-thread messaging
 eframe = "0.28"
