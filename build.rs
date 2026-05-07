@@ -49,6 +49,6 @@ fn main() {
             println!("cargo:warning=Tether libraries not found. FFI disabled. Build will have limited functionality.");
             println!("cargo:warning=To enable FFI, build Tether first: cd ../Tether && mkdir -p build && cd build && cmake .. && make");
         }
-        println!("cargo:rustc-cfg(tether_ffi_disabled)");
+        println!("cargo:rustc-cfg=tether_ffi_disabled");
     }
 }
